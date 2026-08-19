@@ -24,10 +24,16 @@ Skills copied from another repository are welcome when the license allows it.
 
 1. Confirm the upstream license permits redistribution and is compatible with MIT.
 2. Copy the upstream notice to `skills/<name>/LICENSE` and set `license: LICENSE` in frontmatter.
-3. Credit the author and link the upstream source in frontmatter `metadata` and in the skill body.
-4. Adapt the `description` so it routes correctly in this catalog. Upstream descriptions are often written for a different host agent.
+3. Credit the author and link the upstream source in frontmatter `metadata`. Keep
+   credit out of the body so the body stays diffable against upstream.
+4. Keep the body byte-identical to upstream where the license allows it, and set
+   `metadata.vendored: verbatim`. Pulling a later upstream version is then a diff,
+   not a merge. The validator skips the trigger-phrase warning for these skills,
+   since their description is upstream's to write.
 
-`skills/unslop` follows this pattern.
+Edit a vendored body only when it is actually broken in this catalog, and say so
+in the commit message. `skills/unslop` is the worked example: frontmatter adds
+`license` and `metadata`, and every other byte is upstream's.
 
 ## What belongs in a skill
 

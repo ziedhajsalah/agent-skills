@@ -29,7 +29,8 @@ function validateSkill(name) {
     return;
   }
 
-  const { name: fmName, description, compatibility } = parsed.data;
+  const { name: fmName, description, compatibility, metadata } = parsed.data;
+  const verbatim = metadata?.vendored === "verbatim";
 
   if (fmName !== name) {
     errors.push(`${label}: frontmatter name "${fmName}" must match the directory name`);
@@ -41,7 +42,7 @@ function validateSkill(name) {
     errors.push(`${label}: description must be at least ${MIN_DESCRIPTION} characters so it triggers reliably`);
   } else if (description.length > LIMITS.description) {
     errors.push(`${label}: description exceeds ${LIMITS.description} characters (${description.length})`);
-  } else if (!/use when|use this skill/i.test(description)) {
+  } else if (!verbatim && !/use when|use this skill/i.test(description)) {
     warnings.push(`${label}: description should say when to use the skill, not only what it does`);
   }
 

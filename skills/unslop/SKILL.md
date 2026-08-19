@@ -1,28 +1,16 @@
 ---
 name: unslop
-description: Strip AI tells from prose and rewrite it in a human voice. Removes puffery, AI vocabulary, em dashes, rule-of-three padding, hedging, and sycophantic filler, then adds specificity and rhythm. Use when the user says a draft sounds like AI, asks to unslop, de-slop, humanize, or de-AI text, wants a README, PR description, commit message, changelog, doc, or blog post to read like a person wrote it, or asks for an edit pass on writing.
+description: Cut AI tells from any writing. Must always apply.
 license: LICENSE
 metadata:
   author: Lauren Tan
   upstream: https://github.com/cursor/plugins/tree/main/pstack/skills/unslop
-  version: "1.0"
+  vendored: verbatim
 ---
 
 # Unslop
 
-Edit text so it stops reading as machine-generated. Two halves: cut the patterns listed below, then put a voice back in. Doing only the first half produces sterile prose, which is its own tell.
-
-Vendored from [cursor/plugins](https://github.com/cursor/plugins/tree/main/pstack/skills/unslop) by Lauren Tan under MIT. See [LICENSE](LICENSE). The pattern catalog is upstream's; the framing and triggers are adapted for this repo.
-
-## When not to use
-
-- Code, config, and test files. The rules target prose.
-- Text with a required house style or legal wording. Say the conflict, do not silently rewrite.
-- Writing from scratch. This is an edit pass over text that already exists.
-
-## Inputs
-
-The text to edit, and the intended audience or tone if it is not obvious from the text.
+Edit text to remove AI patterns and add human voice.
 
 ## Process
 
@@ -95,9 +83,3 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 29. **Active voice.** Prefer it. Catch "is/are/was/were + past participle" and name the actor: "queries are validated" becomes "the compiler validates queries", "the file is parsed by the loader" becomes "the loader parses the file". Passive is fine only when the actor is unknown or genuinely doesn't matter.
 30. **Cut adverbs, or use a stronger verb.** "runs quickly" becomes "is fast" or the number. "significantly improves" becomes the measured delta. An adverb propping up a weak verb means the verb is wrong.
 31. **Prefer the plain word.** "utilize" becomes "use", "leverage" becomes "use", "facilitate" becomes "help", "numerous" becomes "many", "in the event that" becomes "if". The fancier synonym is rarely clearer.
-
-## Done when
-
-- No pattern from the list above survives in the text, or each survivor has a stated reason.
-- The meaning and the factual claims are unchanged.
-- The self-audit question is answered: nothing left marks the text as AI-generated.
