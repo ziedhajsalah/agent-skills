@@ -1,10 +1,8 @@
-node_modules/
+# Local junk. Skill source lives in skills/ and is committed.
+
 .DS_Store
+node_modules/
 *.log
-.claude/
-.agents/
-.codex/
-.cursor/skills/
-.opencode/
-.gemini/
-.github/skills/
+.env
+.env.*
+.claude/settings.local.json
