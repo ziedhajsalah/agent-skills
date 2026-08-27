@@ -3,6 +3,11 @@
   "notGrouped": "bottom",
   "groupings": [
     {
+      "title": "Code review",
+      "description": "Review diffs against localization, a11y, token, and API-surface conventions before a human reviewer sees them.",
+      "skills": ["amanda-review-mode"]
+    },
+    {
       "title": "Writing",
       "description": "Edit and review prose so it reads like a person wrote it.",
       "skills": ["unslop"]
