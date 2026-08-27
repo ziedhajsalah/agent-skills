@@ -1,8 +1,8 @@
-# aricketson-cc — reviewer profile
+# Amanda — reviewer profile
 
-Inferred from 2,333 review comments across 408 PRs in `clearco-ui` and `web-clearcompany`
-(Mar 2024 – Aug 2026). Everything below is grounded in her own words; PR references point into
-`aricketson-feedback.md` (clearco-ui) and `aricketson-feedback-web-clearcompany.md` (web, prefixed `web`).
+Inferred from 2,333 review comments across 408 PRs in a shared UI library and the app that
+consumes it (Mar 2024 – Aug 2026). Everything below is grounded in her own words; PR numbers in
+quotes are from that corpus (app PRs are prefixed `web`).
 
 ---
 
@@ -122,10 +122,10 @@ data and let components decide behaviour.
 > "I don't think this hook should be making changes to other components and should instead be
 > returning data that can be used by the components." (web #309)
 
-**11. Fix it in the library, not in the app.** A near-ideological position: when `clearco-webapp`
-needs a workaround, the correct fix is upstream in `clearco-ui`.
+**11. Fix it in the library, not in the app.** A near-ideological position: when the consuming app
+needs a workaround, the correct fix is upstream in the shared library.
 
-> "Instead of making this hook, we should update the functionality in `clearco-ui`… we need to
+> "Instead of making this hook, we should update the functionality in the library… we need to
 > prioritize making changes there rather than doing workarounds here." (web #25)
 > "I'd rather have the warning and previous implementation, rather than this new implementation
 > that we then have to rip out anyway." (web #25)
@@ -143,7 +143,7 @@ needs a workaround, the correct fix is upstream in `clearco-ui`.
   finish, but writes the trust down as a condition.
 - **She will un-approve.** "FYI @bhansen-cc, I cleared your approval since there have been
   considerable changes made to this PR since you approved it." (web #99)
-- **PR hygiene is enforced**: title format `[feature] DEV-##### Description`, one ticket per
+- **PR hygiene is enforced**: the project's title convention (type, ticket id, description), one ticket per
   repository, screenshots for visual changes, PR description kept in sync with the code, correct
   target branch.
 - **Code comments are for the code, not the PR.** "Code comments should not be used for PR context." (#215)

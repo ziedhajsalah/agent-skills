@@ -4,7 +4,7 @@
   "groupings": [
     {
       "title": "Code review",
-      "description": "Review diffs against ClearCompany UI conventions before a human reviewer sees them.",
+      "description": "Review diffs against localization, a11y, token, and API-surface conventions before a human reviewer sees them.",
       "skills": ["amanda-review-mode"]
     },
     {

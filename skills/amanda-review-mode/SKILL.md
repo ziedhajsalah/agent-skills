@@ -1,6 +1,6 @@
 ---
 name: amanda-review-mode
-description: Review a PR, branch, commit, or uncommitted working-tree changes the way aricketson-cc reviews them — ClearCompany's clearco-ui / web-clearcompany conventions, localization, a11y, design tokens, Mantine idiom, and small public API surface. Use when the user says "amanda review", "/amanda-review-mode", "review this like Amanda would", or wants a pre-review pass before opening a PR in clearco-ui or web-clearcompany.
+description: Review a PR, branch, commit, or uncommitted working-tree changes the way Amanda reviews them — localization, a11y, design tokens, framework idiom, and small public API surface. Use when the user says "amanda review", "/amanda-review-mode", "review this like Amanda would", or wants a pre-review pass before opening a PR.
 license: MIT
 metadata:
   author: ziedhajsalah
@@ -9,9 +9,8 @@ metadata:
 
 # Amanda review mode
 
-Review the target changes as `aricketson-cc` would. She is the codeowner of `clearco-ui` and
-`web-clearcompany`; this skill reproduces her standards and her voice so a PR can be cleaned up
-before she sees it.
+Review the target changes as Amanda would. This skill reproduces her standards and her voice so a
+PR can be cleaned up before a human reviewer sees it.
 
 Read `references/reviewer-profile.md` before writing any finding. It holds the full ranked
 priorities, her tone rules, and the quotes behind each rule.
@@ -23,17 +22,18 @@ Work out what to review, in this order:
 | User said | Do this |
 | --- | --- |
 | a PR number / URL | `gh pr diff <n>` (+ `gh pr view <n> --json title,body`) |
-| a branch name | `git diff $(git merge-base develop <branch>)...<branch>` |
+| a branch name | `git diff $(git merge-base <default-branch> <branch>)...<branch>` |
 | a commit sha | `git show <sha>` |
 | "uncommitted" / "working tree" / nothing | `git status --short` then `git diff` and `git diff --staged` |
 | a path | `git diff -- <path>` (fall back to reading the files) |
 
-If nothing is specified and the working tree is clean, review the current branch against `develop`.
+If nothing is specified and the working tree is clean, review the current branch against the repo's
+default branch (`main`, `master`, or `develop` — use `git symbolic-ref refs/remotes/origin/HEAD`).
 State which target you resolved before reporting findings.
 
-Always also look at the **PR title and description** when reviewing a PR — she enforces
-`[feature] DEV-##### Description`, screenshots for visual changes, and descriptions that match the
-final code.
+Always also look at the **PR title and description** when reviewing a PR — she enforces the
+project's title convention (type, ticket id, short description), screenshots for visual changes,
+and descriptions that match the final code.
 
 ## 2. Review against her checklist
 
@@ -64,7 +64,7 @@ Walk the diff once per group, in her order of insistence. Full detail and ration
 8. **Docs in the wrong place** — prose in `.mdx` that belongs in JSDoc on the *exported* symbol, then
    surfaced with `<Description />` / `<Stories />`. Hand-listed `<Canvas of={...} />` and manual
    `argTypes` both go stale.
-9. **Library vs app** — a workaround in `web-clearcompany` that should be a fix in `clearco-ui`.
+9. **Library vs app** — a workaround in the consuming app that should be a fix in the shared library.
 10. **Types and structure** — loose `string` that should be an enum or literal type; `unknown` left
     unnarrowed; file path not mirroring the URL path; `index.ts` holding implementation; blanket
     file-level `eslint-disable`; hooks that mutate other components instead of returning data.
