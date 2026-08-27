@@ -42,6 +42,7 @@ After install, the agent reads each skill's `name` and `description` at session 
 
 | Skill | Use when |
 | --- | --- |
+| [amanda-review-mode](skills/amanda-review-mode/SKILL.md) | Pre-reviewing a clearco-ui or web-clearcompany PR the way Amanda would |
 | [unslop](skills/unslop/SKILL.md) | A draft reads like AI wrote it and needs an edit pass |
 
 ## Layout
