@@ -1,0 +1,11 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Writing",
+      "description": "Edit and review prose so it reads like a person wrote it.",
+      "skills": ["unslop"]
+    }
+  ]
+}
