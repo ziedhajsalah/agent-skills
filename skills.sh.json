@@ -3,9 +3,9 @@
   "notGrouped": "bottom",
   "groupings": [
     {
-      "title": "Authoring",
-      "description": "Create and maintain skills in this catalog.",
-      "skills": ["write-a-skill"]
+      "title": "Writing",
+      "description": "Edit and review prose so it reads like a person wrote it.",
+      "skills": ["unslop"]
     }
   ]
 }

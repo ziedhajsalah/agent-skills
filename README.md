@@ -21,7 +21,7 @@ npx skills add ziedhajsalah/agent-skills --list
 Install one skill:
 
 ```bash
-npx skills add ziedhajsalah/agent-skills --skill write-a-skill
+npx skills add ziedhajsalah/agent-skills --skill unslop
 ```
 
 Target specific agents:
@@ -42,7 +42,7 @@ After install, the agent reads each skill's `name` and `description` at session 
 
 | Skill | Use when |
 | --- | --- |
-| [write-a-skill](skills/write-a-skill/SKILL.md) | Creating, editing, or reviewing a skill in this catalog |
+| [unslop](skills/unslop/SKILL.md) | A draft reads like AI wrote it and needs an edit pass |
 
 ## Layout
 
@@ -53,8 +53,9 @@ skills/
     scripts/          optional: commands the agent can run
     references/       optional: docs loaded on demand
     assets/           optional: templates and other files
-skills.sh.json        groups skills on the skills.sh repo page
-scripts/validate.mjs  checks frontmatter, names, and the grouping file
+skills.sh.json         groups skills on the skills.sh repo page
+scripts/validate.mjs   checks frontmatter, names, and the grouping file
+templates/             starting file for a new skill
 ```
 
 `npx skills add` walks `skills/` up to three levels deep and installs every directory that contains a valid `SKILL.md`. Keep one skill per folder. The folder name must match the `name` field in frontmatter.
@@ -63,13 +64,7 @@ Put always-on rules in `AGENTS.md`. Put specialized workflows in skills so they 
 
 ## Authoring
 
-1. Copy the template in `skills/write-a-skill/assets/SKILL.template.md`.
-2. Create `skills/<skill-name>/SKILL.md`.
-3. Add the skill to a group in `skills.sh.json`.
-4. List it in this README.
-5. Run `npm run validate`.
-
-The `write-a-skill` skill has the full procedure. Spec details live in [agentskills.io/specification](https://agentskills.io/specification).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the procedure. Frontmatter rules live in the [Agent Skills specification](https://agentskills.io/specification).
 
 ## Discovery on skills.sh
 
@@ -78,10 +73,11 @@ There is no publish command. skills.sh indexes GitHub repos after someone instal
 ## Validate
 
 ```bash
+npm install
 npm run validate
 ```
 
-Requires Node.js 18 or later. No extra packages.
+Requires Node.js 18 or later. The only dependency is `gray-matter`, used to parse frontmatter.
 
 ## License
 

@@ -1,316 +1,128 @@
 #!/usr/bin/env node
 /**
- * Validate skill packages in this repository.
- *
- * Checks SKILL.md frontmatter against the Agent Skills spec, enforces
- * directory naming, and verifies skills.sh.json groupings.
+ * Validate skill packages: SKILL.md frontmatter, directory naming, and
+ * skills.sh.json groupings. Frontmatter parsing is delegated to gray-matter.
  */
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { readdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import matter from "gray-matter";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SKILLS_DIR = join(ROOT, "skills");
-const MANIFEST_PATH = join(ROOT, "skills.sh.json");
-
 const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const MAX_NAME_LENGTH = 64;
-const MAX_DESCRIPTION_LENGTH = 1024;
-const MAX_COMPATIBILITY_LENGTH = 500;
-const MAX_SKILL_LINES = 500;
-const MIN_DESCRIPTION_LENGTH = 40;
+const LIMITS = { name: 64, description: 1024, compatibility: 500, lines: 500 };
+const MIN_DESCRIPTION = 40;
 
 const errors = [];
 const warnings = [];
 
-function fail(message) {
-  errors.push(message);
-}
+function validateSkill(name) {
+  const label = `skills/${name}`;
+  const file = join(ROOT, "skills", name, "SKILL.md");
 
-function warn(message) {
-  warnings.push(message);
-}
-
-function listSkillDirs() {
-  let entries;
+  let parsed;
   try {
-    entries = readdirSync(SKILLS_DIR, { withFileTypes: true });
-  } catch {
-    fail(`Missing skills directory at ${relative(ROOT, SKILLS_DIR)}`);
-    return [];
-  }
-
-  const dirs = [];
-  for (const entry of entries) {
-    if (entry.name.startsWith(".")) {
-      continue;
-    }
-    const fullPath = join(SKILLS_DIR, entry.name);
-    if (!entry.isDirectory()) {
-      fail(`Unexpected file in skills/: ${entry.name}`);
-      continue;
-    }
-    dirs.push({ name: entry.name, path: fullPath });
-  }
-  return dirs.sort((a, b) => a.name.localeCompare(b.name));
-}
-
-function unquote(value) {
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
-}
-
-function parseFrontmatter(text, label) {
-  const normalized = text.replace(/\r\n/g, "\n");
-  if (!normalized.startsWith("---\n")) {
-    fail(`${label}: SKILL.md must start with YAML frontmatter delimited by ---`);
-    return null;
-  }
-
-  const end = normalized.indexOf("\n---\n", 4);
-  if (end === -1) {
-    fail(`${label}: SKILL.md frontmatter is not closed with ---`);
-    return null;
-  }
-
-  const yaml = normalized.slice(4, end);
-  const body = normalized.slice(end + 5);
-  const fields = {};
-  const lines = yaml.split("\n");
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.trim() === "" || line.trimStart().startsWith("#")) {
-      continue;
-    }
-
-    const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (!match) {
-      fail(`${label}: cannot parse frontmatter line "${line}"`);
-      continue;
-    }
-
-    const key = match[1];
-    let value = match[2];
-
-    if (value === "|" || value === ">" || value === "|-" || value === ">-") {
-      const block = [];
-      i += 1;
-      while (i < lines.length && (lines[i] === "" || /^\s+/.test(lines[i]))) {
-        block.push(lines[i].replace(/^\s{2}/, ""));
-        i += 1;
-      }
-      i -= 1;
-      value = block.join("\n").trim();
-    } else if (value === "") {
-      const nested = {};
-      i += 1;
-      while (i < lines.length) {
-        const nestedLine = lines[i];
-        if (nestedLine.trim() === "") {
-          i += 1;
-          continue;
-        }
-        const nestedMatch = nestedLine.match(/^\s+([A-Za-z0-9_-]+):\s*(.*)$/);
-        if (!nestedMatch) {
-          i -= 1;
-          break;
-        }
-        nested[nestedMatch[1]] = unquote(nestedMatch[2]);
-        i += 1;
-      }
-      i -= 1;
-      value = nested;
-    } else {
-      value = unquote(value);
-    }
-
-    fields[key] = value;
-  }
-
-  return { fields, body, lineCount: normalized.split("\n").length };
-}
-
-function validateSkill(skill) {
-  const label = `skills/${skill.name}`;
-  const skillFile = join(skill.path, "SKILL.md");
-
-  let stat;
-  try {
-    stat = statSync(skillFile);
-  } catch {
-    fail(`${label}: missing SKILL.md`);
-    return;
-  }
-  if (!stat.isFile()) {
-    fail(`${label}: SKILL.md is not a file`);
+    parsed = matter(readFileSync(file, "utf8"));
+  } catch (error) {
+    errors.push(`${label}: cannot read or parse SKILL.md (${error.message})`);
     return;
   }
 
-  const text = readFileSync(skillFile, "utf8");
-  const parsed = parseFrontmatter(text, label);
-  if (!parsed) {
-    return;
+  const { name: fmName, description, compatibility, metadata } = parsed.data;
+  const verbatim = metadata?.vendored === "verbatim";
+
+  if (fmName !== name) {
+    errors.push(`${label}: frontmatter name "${fmName}" must match the directory name`);
+  } else if (name.length > LIMITS.name || !NAME_PATTERN.test(name)) {
+    errors.push(`${label}: name must be kebab-case and at most ${LIMITS.name} characters`);
   }
 
-  const { fields, body, lineCount } = parsed;
-  const name = fields.name;
-  const description = fields.description;
-
-  if (typeof name !== "string" || name.length === 0) {
-    fail(`${label}: frontmatter is missing name`);
-  } else {
-    if (name !== skill.name) {
-      fail(`${label}: name "${name}" must match the directory name`);
-    }
-    if (name.length > MAX_NAME_LENGTH) {
-      fail(`${label}: name exceeds ${MAX_NAME_LENGTH} characters`);
-    }
-    if (!NAME_PATTERN.test(name)) {
-      fail(
-        `${label}: name must be lowercase alphanumeric with single hyphens (no leading, trailing, or consecutive hyphens)`,
-      );
-    }
+  if (typeof description !== "string" || description.length < MIN_DESCRIPTION) {
+    errors.push(`${label}: description must be at least ${MIN_DESCRIPTION} characters so it triggers reliably`);
+  } else if (description.length > LIMITS.description) {
+    errors.push(`${label}: description exceeds ${LIMITS.description} characters (${description.length})`);
+  } else if (!verbatim && !/use when|use this skill/i.test(description)) {
+    warnings.push(`${label}: description should say when to use the skill, not only what it does`);
   }
 
-  if (typeof description !== "string" || description.length === 0) {
-    fail(`${label}: frontmatter is missing description`);
-  } else {
-    if (description.length > MAX_DESCRIPTION_LENGTH) {
-      fail(
-        `${label}: description exceeds ${MAX_DESCRIPTION_LENGTH} characters (${description.length})`,
-      );
-    }
-    if (description.length < MIN_DESCRIPTION_LENGTH) {
-      fail(
-        `${label}: description is too short to trigger reliably (${description.length} chars; need at least ${MIN_DESCRIPTION_LENGTH})`,
-      );
-    }
-    const lower = description.toLowerCase();
-    if (!lower.includes("use when") && !lower.includes("use this skill")) {
-      warn(
-        `${label}: description should say what the skill does and when to use it`,
-      );
-    }
+  if (typeof compatibility === "string" && compatibility.length > LIMITS.compatibility) {
+    errors.push(`${label}: compatibility exceeds ${LIMITS.compatibility} characters`);
   }
 
-  if (fields.compatibility && fields.compatibility.length > MAX_COMPATIBILITY_LENGTH) {
-    fail(
-      `${label}: compatibility exceeds ${MAX_COMPATIBILITY_LENGTH} characters`,
-    );
+  const lines = parsed.content.split("\n").length;
+  if (lines > LIMITS.lines) {
+    errors.push(`${label}: SKILL.md body has ${lines} lines; keep it under ${LIMITS.lines} and move detail into references/`);
   }
 
-  if (lineCount > MAX_SKILL_LINES) {
-    fail(
-      `${label}: SKILL.md has ${lineCount} lines; keep it under ${MAX_SKILL_LINES} and move detail into references/`,
-    );
-  }
-
-  if (!/^#\s+\S/m.test(body)) {
-    fail(`${label}: SKILL.md body needs a top-level Markdown heading`);
+  if (!/^#\s+\S/m.test(parsed.content)) {
+    errors.push(`${label}: SKILL.md body needs a top-level Markdown heading`);
   }
 }
 
-function validateManifest(skillNames) {
-  let raw;
-  try {
-    raw = readFileSync(MANIFEST_PATH, "utf8");
-  } catch {
-    fail("Missing skills.sh.json at the repository root");
-    return;
-  }
-
+function validateManifest(names) {
   let manifest;
   try {
-    manifest = JSON.parse(raw);
+    manifest = JSON.parse(readFileSync(join(ROOT, "skills.sh.json"), "utf8"));
   } catch (error) {
-    fail(`skills.sh.json is not valid JSON: ${error.message}`);
+    errors.push(`skills.sh.json is missing or invalid (${error.message})`);
     return;
   }
 
   if (!Array.isArray(manifest.groupings) || manifest.groupings.length === 0) {
-    fail("skills.sh.json must include a non-empty groupings array");
+    errors.push("skills.sh.json must include a non-empty groupings array");
     return;
   }
 
-  if (
-    manifest.notGrouped !== undefined &&
-    manifest.notGrouped !== "top" &&
-    manifest.notGrouped !== "bottom"
-  ) {
-    fail('skills.sh.json notGrouped must be "top" or "bottom"');
-  }
-
-  const seen = new Set();
-  const skillSet = new Set(skillNames);
-
+  const grouped = new Set();
   for (const group of manifest.groupings) {
-    if (!group || typeof group.title !== "string" || group.title.trim() === "") {
-      fail("skills.sh.json grouping is missing a title");
-      continue;
-    }
-    if (!Array.isArray(group.skills) || group.skills.length === 0) {
-      fail(`skills.sh.json grouping "${group.title}" needs at least one skill`);
+    if (!group?.title?.trim() || !Array.isArray(group.skills) || group.skills.length === 0) {
+      errors.push(`skills.sh.json grouping ${JSON.stringify(group?.title ?? null)} needs a title and at least one skill`);
       continue;
     }
     for (const skill of group.skills) {
-      if (typeof skill !== "string" || skill.trim() === "") {
-        fail(`skills.sh.json grouping "${group.title}" has an empty skill name`);
-        continue;
+      if (!names.includes(skill)) {
+        errors.push(`skills.sh.json grouping "${group.title}" references unknown skill "${skill}"`);
       }
-      if (!skillSet.has(skill)) {
-        fail(
-          `skills.sh.json grouping "${group.title}" references unknown skill "${skill}"`,
-        );
+      if (grouped.has(skill)) {
+        warnings.push(`skills.sh.json lists "${skill}" in more than one group; the first group wins`);
       }
-      if (seen.has(skill)) {
-        warn(
-          `skills.sh.json lists "${skill}" in more than one group; the first group wins on skills.sh`,
-        );
-      }
-      seen.add(skill);
+      grouped.add(skill);
     }
   }
 
-  for (const name of skillNames) {
-    if (!seen.has(name)) {
-      warn(
-        `skill "${name}" is not listed in skills.sh.json and will appear under Other skills`,
-      );
-    }
+  for (const name of names.filter((n) => !grouped.has(n))) {
+    errors.push(`skill "${name}" is missing from skills.sh.json; add it to a group`);
   }
 }
 
-const skills = listSkillDirs();
-if (skills.length === 0 && errors.length === 0) {
-  fail("No skill directories found under skills/");
+const entries = readdirSync(join(ROOT, "skills"), { withFileTypes: true })
+  .filter((entry) => !entry.name.startsWith("."));
+
+for (const entry of entries.filter((e) => !e.isDirectory())) {
+  errors.push(`skills/ must contain only skill directories; found file "${entry.name}"`);
 }
 
-for (const skill of skills) {
-  validateSkill(skill);
+const names = entries.filter((e) => e.isDirectory()).map((e) => e.name).sort();
+if (names.length === 0) {
+  errors.push("No skill directories found under skills/");
 }
-validateManifest(skills.map((skill) => skill.name));
+
+for (const name of names) {
+  validateSkill(name);
+}
+validateManifest(names);
 
 for (const warning of warnings) {
   console.warn(`warning: ${warning}`);
 }
+for (const error of errors) {
+  console.error(`error: ${error}`);
+}
 
 if (errors.length > 0) {
-  for (const error of errors) {
-    console.error(`error: ${error}`);
-  }
-  console.error(
-    `\n${errors.length} error(s), ${warnings.length} warning(s) across ${skills.length} skill(s).`,
-  );
+  console.error(`\n${errors.length} error(s), ${warnings.length} warning(s) across ${names.length} skill(s).`);
   process.exit(1);
 }
 
-console.log(
-  `ok: ${skills.length} skill(s) valid (${warnings.length} warning(s)).`,
-);
+console.log(`ok: ${names.length} skill(s) valid (${warnings.length} warning(s)).`);
