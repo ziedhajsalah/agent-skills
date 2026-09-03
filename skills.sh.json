@@ -11,6 +11,11 @@
       "title": "Writing",
       "description": "Edit and review prose so it reads like a person wrote it.",
       "skills": ["unslop"]
+    },
+    {
+      "title": "Architecture",
+      "description": "Explain how a subsystem works and critique its architecture before changing it.",
+      "skills": ["how"]
     }
   ]
 }
